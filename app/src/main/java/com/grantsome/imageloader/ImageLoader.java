@@ -6,7 +6,6 @@ import android.graphics.BitmapFactory;
 import android.os.Handler;
 import android.util.Log;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -63,7 +62,7 @@ public class ImageLoader implements Serializable {
                     imageView.setImageBitmap(mBitmap);
                     break;
                 case 444:
-                    Toast.makeText(sContext, (String) msg.obj, Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(sContext, (String) msg.obj, Toast.LENGTH_SHORT).show();
                     break;
                 default:
                     break;
@@ -78,6 +77,7 @@ public class ImageLoader implements Serializable {
             @Override
             public void run() {
                 try{
+
                     if(!isSaveFile()){
                         mURL = new URL(mUri);
                         loadFileFromHttp(mURL);
@@ -85,6 +85,7 @@ public class ImageLoader implements Serializable {
                         getBitmapFile(mUri);
                         Log.d("ImageLoader","已经执行getBitmap方法");
                     }
+
                 }catch (Exception e){
                     handler.sendMessage(handler.obtainMessage(444,"网络连接失败"));
                     e.printStackTrace();
@@ -101,11 +102,16 @@ public class ImageLoader implements Serializable {
               mHttpConnection.setUseCaches(true);
               mHttpConnection.setDoInput(true);
               InputStream mInputStream = mHttpConnection.getInputStream();
-              mBitmap = BitmapFactory.decodeStream(mInputStream);
+              final BitmapFactory.Options options = new BitmapFactory.Options();
+              options.inSampleSize = 3;
+              mBitmap = BitmapFactory.decodeStream(mInputStream,null,options);
               handler.sendMessage(handler.obtainMessage(666,mBitmap));
               saveFile(mBitmap,mURL.toString());
+
               Log.d("ImageLoader","已经执行saveBitmap方法");
-              mInputStream.close();
+              if(mInputStream!=null) {
+                  mInputStream.close();
+              }
         } catch (Exception e){
               e.printStackTrace();
         }
@@ -135,7 +141,9 @@ public class ImageLoader implements Serializable {
     public void getBitmapFile(String uri) throws Exception{
         File dirFile = new File(sContext.getExternalCacheDir()+uri);
         if(dirFile.exists()){
-            Bitmap mBitmap = BitmapFactory.decodeFile(dirFile.toString());
+            final BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inSampleSize = 3;
+            Bitmap mBitmap = BitmapFactory.decodeFile(dirFile.toString(),options);
             Log.d("ImageLoader","get里面的path"+dirFile.toString());
             handler.sendMessage(handler.obtainMessage(555,mBitmap));
         }
